@@ -52,13 +52,87 @@ class AppConfig:
 
 class SupabaseConfig:
     """Supabase 설정"""
-    SUPABASE_URL = os.getenv("SUPABASE_URL", st.secrets.get("SUPABASE_URL", ""))
-    SUPABASE_KEY = os.getenv("SUPABASE_KEY", st.secrets.get("SUPABASE_KEY", ""))
     GRADUATES_TABLE = "graduation_employment"
+    _url_cache = None
+    _key_cache = None
+
+    @classmethod
+    def _get_url(cls):
+        """URL 가져오기 (환경변수, top-level secrets, nested secrets 지원)"""
+        if cls._url_cache is not None:
+            return cls._url_cache
+
+        # 1. 환경변수 우선
+        url = os.getenv("SUPABASE_URL", "").strip()
+        if url:
+            cls._url_cache = url
+            return url
+
+        # 2. Top-level secrets: SUPABASE_URL = "..."
+        try:
+            url = st.secrets.get("SUPABASE_URL", "").strip()
+            if url:
+                cls._url_cache = url
+                return url
+        except:
+            pass
+
+        # 3. Nested secrets: [supabase] url = "..."
+        try:
+            url = st.secrets.supabase.url
+            if url:
+                cls._url_cache = url
+                return url
+        except:
+            pass
+
+        cls._url_cache = ""
+        return ""
+
+    @classmethod
+    def _get_key(cls):
+        """Key 가져오기 (환경변수, top-level secrets, nested secrets 지원)"""
+        if cls._key_cache is not None:
+            return cls._key_cache
+
+        # 1. 환경변수 우선
+        key = os.getenv("SUPABASE_KEY", "").strip()
+        if key:
+            cls._key_cache = key
+            return key
+
+        # 2. Top-level secrets: SUPABASE_KEY = "..."
+        try:
+            key = st.secrets.get("SUPABASE_KEY", "").strip()
+            if key:
+                cls._key_cache = key
+                return key
+        except:
+            pass
+
+        # 3. Nested secrets: [supabase] key = "..."
+        try:
+            key = st.secrets.supabase.key
+            if key:
+                cls._key_cache = key
+                return key
+        except:
+            pass
+
+        cls._key_cache = ""
+        return ""
+
+    @property
+    def SUPABASE_URL(self):
+        return self._get_url()
+
+    @property
+    def SUPABASE_KEY(self):
+        return self._get_key()
 
     @classmethod
     def is_configured(cls) -> bool:
-        return bool(cls.SUPABASE_URL and cls.SUPABASE_KEY)
+        return bool(cls._get_url() and cls._get_key())
 
 
 # 로컬 모듈 import 시도
@@ -72,7 +146,7 @@ except (ImportError, ModuleNotFoundError):
 # Supabase DB 모듈 import 시도
 try:
     from supabase_db import get_supabase_client, SupabaseDB
-except (ImportError, ModuleNotFoundError):
+except Exception:
     # 모듈을 찾을 수 없으면 더미 클래스와 함수 제공
     class SupabaseDB:
         """Fallback SupabaseDB 클래스"""

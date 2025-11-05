@@ -16,7 +16,14 @@ from dataclasses import dataclass
 import warnings
 from datetime import datetime
 import logging
-from dotenv import load_dotenv
+import os
+
+# 환경 변수 로드 시도
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # 로컬 모듈 import
 from config import app_config, supabase_config
@@ -27,9 +34,6 @@ warnings.filterwarnings('ignore')
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# 환경 변수 로드
-load_dotenv()
 
 # =====================
 # 데이터 클래스

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 import warnings
 import time
 from datetime import datetime
-from config import init_supabase, supabase_config
+from config import init_supabase
 import logging
 
 warnings.filterwarnings('ignore')

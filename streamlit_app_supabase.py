@@ -26,9 +26,58 @@ except (ImportError, ModuleNotFoundError):
     # Streamlit Cloud 또는 python-dotenv가 없는 환경에서는 스킵
     pass
 
-# 로컬 모듈 import
-from config import app_config, supabase_config
-from supabase_db import get_supabase_client, SupabaseDB
+# =====================
+# 설정 클래스 (로컬 import 실패 시 대비)
+# =====================
+
+class AppConfig:
+    """애플리케이션 설정"""
+    APP_TITLE = "정보컴퓨터공학부 취업 현황"
+    APP_ICON = "📊"
+    APP_VERSION = "v3.0 (Supabase 연동)"
+
+    # 제외 대상 카테고리
+    EXCLUDE_CATEGORIES = ['진학', '외국인']
+
+    COLORS = {
+        'primary': '#007bff',
+        'success': '#28a745',
+        'warning': '#ffc107',
+        'danger': '#dc3545',
+        'info': '#17a2b8',
+        'light': '#f8f9fa',
+        'dark': '#343a40'
+    }
+
+
+class SupabaseConfig:
+    """Supabase 설정"""
+    SUPABASE_URL = os.getenv("SUPABASE_URL", st.secrets.get("SUPABASE_URL", ""))
+    SUPABASE_KEY = os.getenv("SUPABASE_KEY", st.secrets.get("SUPABASE_KEY", ""))
+    GRADUATES_TABLE = "graduation_employment"
+
+    @classmethod
+    def is_configured(cls) -> bool:
+        return bool(cls.SUPABASE_URL and cls.SUPABASE_KEY)
+
+
+# 로컬 모듈 import 시도
+try:
+    from config import app_config, supabase_config
+except (ImportError, ModuleNotFoundError):
+    # 모듈 로드 실패 시 인라인 정의 사용
+    app_config = AppConfig()
+    supabase_config = SupabaseConfig()
+
+# Supabase DB 모듈 import 시도
+try:
+    from supabase_db import get_supabase_client, SupabaseDB
+except (ImportError, ModuleNotFoundError):
+    # 모듈을 찾을 수 없으면 더미 함수 제공
+    @st.cache_resource
+    def get_supabase_client():
+        st.error("❌ Supabase 모듈을 찾을 수 없습니다")
+        return None
 
 warnings.filterwarnings('ignore')
 
@@ -178,7 +227,6 @@ def safe_divide(numerator, denominator, default=0):
 # 데이터 분석 함수
 # =====================
 
-@st.cache_data(ttl=3600)
 def get_overall_stats(db: SupabaseDB) -> EmploymentStats:
     """전체 취업 통계 계산"""
     df = db.get_all_graduates()
@@ -196,21 +244,18 @@ def get_overall_stats(db: SupabaseDB) -> EmploymentStats:
     return EmploymentStats(total, employed, unemployed, employment_rate)
 
 
-@st.cache_data(ttl=3600)
 def get_yearly_stats(db: SupabaseDB) -> pd.DataFrame:
     """연도별 취업 통계 계산"""
     yearly_stats = db.get_yearly_stats()
     return yearly_stats if yearly_stats is not None else pd.DataFrame()
 
 
-@st.cache_data(ttl=3600)
 def get_regional_stats(db: SupabaseDB) -> pd.DataFrame:
     """지역별 취업 통계 계산"""
     regional_stats = db.get_regional_stats()
     return regional_stats if regional_stats is not None else pd.DataFrame()
 
 
-@st.cache_data(ttl=3600)
 def get_company_stats(db: SupabaseDB) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """기업 통계 계산"""
     company_type_stats, company_size_stats = db.get_company_stats()

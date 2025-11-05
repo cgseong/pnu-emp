@@ -73,7 +73,11 @@ except (ImportError, ModuleNotFoundError):
 try:
     from supabase_db import get_supabase_client, SupabaseDB
 except (ImportError, ModuleNotFoundError):
-    # 모듈을 찾을 수 없으면 더미 함수 제공
+    # 모듈을 찾을 수 없으면 더미 클래스와 함수 제공
+    class SupabaseDB:
+        """Fallback SupabaseDB 클래스"""
+        pass
+
     @st.cache_resource
     def get_supabase_client():
         st.error("❌ Supabase 모듈을 찾을 수 없습니다")

@@ -506,7 +506,7 @@ class EmploymentDataProcessor:
                 'categorical_columns': categorical_columns,
                 'year_range': (int(df['조사년도'].min()), int(df['조사년도'].max())) if '조사년도' in df.columns else None,
                 'memory_usage': df.memory_usage(deep=True).sum(),
-                'file_size': os.path.getsize(self.file_path) if os.path.exists(self.file_path) else 0,
+                'file_size': 0,  # Supabase에서 로드하므로 file_path 없음
                 'processing_time': time.time()
             }
             

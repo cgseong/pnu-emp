@@ -57,7 +57,7 @@ DATA_CONFIG = {
 APP_META = {
     'title': "📊 정보컴퓨터공학부 취업 현황",
     'subtitle': "Employment Status Analysis Dashboard",
-    'version': "v2.0",
+    'version': "v2.1",
     'period': "2020년 ~ 2024년",
     'target': "학부 졸업자 (진학자/외국인 제외)"
 }

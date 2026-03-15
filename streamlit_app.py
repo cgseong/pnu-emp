@@ -792,41 +792,33 @@ class VisualizationModule:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric(
                 label="🎓 전체 졸업자",
                 value=f"{stats.total:,}명",
                 help="진학자 및 외국인 제외"
             )
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric(
                 label="✅ 취업자",
                 value=f"{stats.employed:,}명",
                 delta=f"{stats.employment_rate:.1f}% 취업률"
             )
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col3:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric(
                 label="❌ 미취업자",
                 value=f"{stats.unemployed:,}명",
                 delta=f"{100-stats.employment_rate:.1f}% 미취업률"
             )
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col4:
             # 취업률에 따른 색상 결정
             rate_color = "🟢" if stats.employment_rate >= 80 else "🟡" if stats.employment_rate >= 60 else "🔴"
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
             st.metric(
                 label=f"{rate_color} 취업률",
                 value=f"{stats.employment_rate:.1f}%"
             )
-            st.markdown('</div>', unsafe_allow_html=True)
     
     @staticmethod
     def create_yearly_trend_chart(yearly_stats: pd.DataFrame) -> go.Figure:

@@ -910,28 +910,8 @@ class VisualizationModule:
         return fig
     
     @staticmethod
-    def create_regional_chart(regional_stats: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
+    def create_regional_chart(regional_stats: pd.DataFrame) -> go.Figure:
         """지역별 분석 차트 생성"""
-        # 막대 차트
-        top_10_regions = regional_stats.head(10).copy()
-        bar_fig = px.bar(
-            top_10_regions,  # 상위 10개 지역만 표시
-            x='지역',
-            y='취업자수',
-            text='비율',
-            title='🗺️ 상위 10개 지역별 취업자 수',
-            labels={'취업자수': '취업자 수 (명)', '지역': '지역'},
-            color='취업자수',
-            color_continuous_scale='viridis'
-        )
-        bar_fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
-        bar_fig.update_layout(
-            height=500,
-            showlegend=False,
-            xaxis_title='지역',
-            yaxis_title='취업자 수 (명)'
-        )
-        
         # 보조 막대 차트 (상위 8개 지역 + 기타)
         top_regions = regional_stats.head(8).copy()
         other_count = regional_stats.iloc[8:]['취업자수'].sum() if len(regional_stats) > 8 else 0
@@ -974,7 +954,7 @@ class VisualizationModule:
             margin=dict(l=20, r=90, t=60, b=20)
         )
         
-        return bar_fig, comparison_fig
+        return comparison_fig
     
     @staticmethod
     def create_company_charts(company_type_stats: pd.DataFrame, company_size_stats: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
@@ -1278,15 +1258,10 @@ def render_regional_analysis(processor: EmploymentDataProcessor):
         return
     
     # 차트 생성
-    bar_chart, comparison_chart = VisualizationModule.create_regional_chart(regional_stats)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(bar_chart, use_container_width=True)
-    with col2:
-        st.plotly_chart(comparison_chart, use_container_width=True)
+    comparison_chart = VisualizationModule.create_regional_chart(regional_stats)
+    st.plotly_chart(comparison_chart, use_container_width=True)
 
-    st.caption("왼쪽은 상위 10개 지역 전체 비교, 오른쪽은 상위 8개 지역과 나머지 지역 묶음을 함께 비교한 요약 차트입니다.")
+    st.caption("상위 8개 지역과 나머지 지역 묶음을 함께 비교한 요약 차트입니다.")
     
     # 지역별 인사이트
     generate_regional_insights(regional_stats)

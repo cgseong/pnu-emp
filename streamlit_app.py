@@ -1298,15 +1298,10 @@ def render_company_analysis(processor: EmploymentDataProcessor):
     company_type_stats, company_group_stats = processor.get_company_stats()
     
     if not company_type_stats.empty:
-        type_chart, size_chart = VisualizationModule.create_company_charts(company_type_stats, company_group_stats)
+        type_chart, _ = VisualizationModule.create_company_charts(company_type_stats, company_group_stats)
         
         # 차트 표시
-        col1, col2 = st.columns(2)
-        with col1:
-            st.plotly_chart(type_chart, use_container_width=True)
-        with col2:
-            if not company_group_stats.empty:
-                st.plotly_chart(size_chart, use_container_width=True)
+        st.plotly_chart(type_chart, use_container_width=True)
 
         st.caption("막대 길이는 취업자 수를, 라벨은 취업자 수와 비율을 함께 보여줍니다.")
         

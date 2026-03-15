@@ -1168,19 +1168,26 @@ def render_dashboard(processor: EmploymentDataProcessor, stats: EmploymentStats,
 
     st.caption("KPI와 연도별 탭은 전체 졸업자 대비 취업률을, 지역/기업 탭은 취업자 분포를 중심으로 보여줍니다.")
     
-    # 탭 기반 대시보드 구성 (품질보고서 탭 제거)
-    tabs = st.tabs(["📈 연도별 분석", "🗺️ 지역별 분석", "🏢 기업별 분석", "🔍 상세 데이터"])
+    # 재렌더 시에도 현재 페이지를 유지하도록 세션 상태 기반 네비게이션 사용
+    tab_options = ["📈 연도별 분석", "🗺️ 지역별 분석", "🏢 기업별 분석", "🔍 상세 데이터"]
+    selected_tab = st.radio(
+        "분석 메뉴",
+        options=tab_options,
+        horizontal=True,
+        label_visibility="collapsed",
+        key="dashboard_tab"
+    )
     
-    with tabs[0]:
+    if selected_tab == tab_options[0]:
         render_yearly_analysis(processor)
-    
-    with tabs[1]:
+
+    elif selected_tab == tab_options[1]:
         render_regional_analysis(processor)
-    
-    with tabs[2]:
+
+    elif selected_tab == tab_options[2]:
         render_company_analysis(processor)
-    
-    with tabs[3]:
+
+    else:
         show_advanced_filters(processor)
     
     # 푸터

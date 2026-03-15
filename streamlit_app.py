@@ -1038,43 +1038,17 @@ def show_header():
 
 def show_insights(trend: TrendAnalysis, stats: EmploymentStats):
     """주요 인사이트 표시"""
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown(f'''
-        <div class="insight-box">
-            <h4>📊 주요 통계 인사이트</h4>
-            <ul>
-                <li><strong>최고 취업률:</strong> {trend.best_year}년 {trend.best_rate:.1f}%</li>
-                <li><strong>최저 취업률:</strong> {trend.worst_year}년 {trend.worst_rate:.1f}%</li>
-                <li><strong>평균 취업률:</strong> {trend.average_rate:.1f}%</li>
-                <li><strong>최근 트렌드:</strong> {trend.trend_emoji} {trend.trend_direction}</li>
-            </ul>
-        </div>
-        ''', unsafe_allow_html=True)
-    
-    with col2:
-        # 취업률 평가
-        if stats.employment_rate >= 80:
-            status = "우수"
-            color = COLORS['success']
-            recommendation = "현재 수준을 유지하고 질적 향상에 집중하세요."
-        elif stats.employment_rate >= 60:
-            status = "양호"
-            color = COLORS['warning']
-            recommendation = "취업률 향상을 위한 추가 프로그램 검토가 필요합니다."
-        else:
-            status = "개선 필요"
-            color = COLORS['danger']
-            recommendation = "취업 지원 프로그램의 전면적인 검토와 개선이 시급합니다."
-        
-        st.markdown(f'''
-        <div class="insight-box">
-            <h4>💡 개선 방향 제안</h4>
-            <p><strong>현재 상태:</strong> <span style="color: {color};">{status}</span></p>
-            <p><strong>권장사항:</strong> {recommendation}</p>
-        </div>
-        ''', unsafe_allow_html=True)
+    st.markdown(f'''
+    <div class="insight-box">
+        <h4>📊 주요 통계 인사이트</h4>
+        <ul>
+            <li><strong>최고 취업률:</strong> {trend.best_year}년 {trend.best_rate:.1f}%</li>
+            <li><strong>최저 취업률:</strong> {trend.worst_year}년 {trend.worst_rate:.1f}%</li>
+            <li><strong>평균 취업률:</strong> {trend.average_rate:.1f}%</li>
+            <li><strong>최근 트렌드:</strong> {trend.trend_emoji} {trend.trend_direction}</li>
+        </ul>
+    </div>
+    ''', unsafe_allow_html=True)
 
 def show_advanced_filters(processor: EmploymentDataProcessor):
     """고급 필터링 및 검색 인터페이스"""
@@ -1244,9 +1218,6 @@ def render_yearly_analysis(processor: EmploymentDataProcessor):
         '미취업자수': '{:,}명'
     })
     st.dataframe(styled_df, use_container_width=True)
-    
-    # 인사이트 생성
-    generate_yearly_insights(yearly_stats)
 
 def render_regional_analysis(processor: EmploymentDataProcessor):
     """지역별 분석 탭 렌더링"""

@@ -1166,7 +1166,7 @@ def render_dashboard(processor: EmploymentDataProcessor, stats: EmploymentStats,
     # 인사이트 표시
     show_insights(trend, stats)
 
-    st.caption("KPI와 연도별 탭은 전체 졸업자 대비 취업률을, 지역/기업 탭은 취업자 분포를 중심으로 보여줍니다.")
+    st.caption("")
     
     # 재렌더 시에도 현재 페이지를 유지하도록 세션 상태 기반 네비게이션 사용
     tab_options = ["📈 연도별 분석", "🗺️ 지역별 분석", "🏢 기업별 분석", "🔍 상세 데이터"]

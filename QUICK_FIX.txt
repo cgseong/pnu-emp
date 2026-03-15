@@ -1,0 +1,69 @@
+===============================================================================
+QUICK FIX - Streamlit Cloud supabase ModuleNotFoundError
+===============================================================================
+
+ERROR MESSAGE:
+    ModuleNotFoundError: This app has encountered an error...
+    from config import init_supabase, supabase_config
+
+CAUSE:
+    Python environment not rebuilt with new dependencies
+
+FIX (Takes 2-5 minutes):
+    1. Go to https://share.streamlit.io
+    2. Click your app ("pnu-emp" or similar)
+    3. Click three dots (...) → "Manage app"
+    4. Click "Reboot" button
+    5. Wait 2-5 minutes for rebuild
+    6. App should load successfully
+
+THAT'S IT!
+
+===============================================================================
+VERIFICATION
+===============================================================================
+
+After reboot, you should see:
+    ✓ No error messages
+    ✓ Green "Your app is running" indicator
+    ✓ Dashboard loads
+    ✓ Employment data displays
+
+If still not working after 5 minutes:
+    → See FIX_STREAMLIT_CLOUD.md for detailed troubleshooting
+    → Check Streamlit Cloud logs for specific errors
+    → Verify requirements.txt has "supabase>=2.23.0" on line 7
+
+===============================================================================
+WHY THIS HAPPENS
+===============================================================================
+
+When you update requirements.txt, Streamlit Cloud doesn't automatically
+rebuild the environment. Clicking "Reboot" forces it to:
+
+    1. Stop the app
+    2. Delete old Python environment
+    3. Create fresh Python environment
+    4. Install ALL packages from requirements.txt
+    5. Start the app with new dependencies
+
+This is a normal part of deploying changes to Streamlit Cloud.
+
+===============================================================================
+STATUS CHECK
+===============================================================================
+
+Everything else is correct:
+    ✓ requirements.txt has supabase package
+    ✓ .streamlit/secrets.toml has Supabase credentials
+    ✓ config.py loads credentials correctly
+    ✓ streamlit_app.py imports config correctly
+
+Just need to rebuild the environment.
+
+===============================================================================
+ESTIMATED TIME: 5 minutes
+DIFFICULTY: VERY EASY (one button click)
+EXPECTED RESULT: App works perfectly
+
+===============================================================================

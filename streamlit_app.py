@@ -169,6 +169,44 @@ def load_css():
             border-color: {COLORS['primary']};
             box-shadow: 0 2px 4px rgba(0,123,255,0.3);
         }}
+
+        .stTabs [data-baseweb="tab"]:focus-visible {{
+            outline: 3px solid rgba(0, 123, 255, 0.35);
+            outline-offset: 2px;
+        }}
+
+        .quick-guide {{
+            background: linear-gradient(135deg, #fff9e6 0%, #fef3c7 100%);
+            border-left: 4px solid {COLORS['warning']};
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin: 0 0 1.5rem 0;
+        }}
+
+        .quick-guide p {{
+            margin: 0.2rem 0;
+        }}
+
+        @media (max-width: 768px) {{
+            .main-header {{
+                padding: 0.9rem 0.8rem;
+            }}
+
+            .metric-card {{
+                padding: 1rem;
+            }}
+
+            .stTabs [data-baseweb="tab-list"] {{
+                gap: 6px;
+                padding: 6px;
+            }}
+
+            .stTabs [data-baseweb="tab"] {{
+                height: auto;
+                min-height: 44px;
+                padding: 6px 10px;
+            }}
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -240,6 +278,13 @@ def safe_divide(numerator, denominator, default=0):
         return numerator / denominator if denominator != 0 else default
     except (TypeError, ZeroDivisionError):
         return default
+
+def get_available_column(df: pd.DataFrame, candidates: List[str]) -> Optional[str]:
+    """여러 후보 중 현재 데이터프레임에 존재하는 첫 번째 컬럼명 반환"""
+    for column in candidates:
+        if column in df.columns:
+            return column
+    return None
 
 # =====================
 # 데이터 클래스
@@ -1004,6 +1049,13 @@ def show_header():
     </div>
     ''', unsafe_allow_html=True)
 
+    st.markdown('''
+    <div class="quick-guide">
+        <p><strong>빠른 탐색 가이드</strong></p>
+        <p>1. 상단 KPI로 전체 규모를 확인하고, 2. 연도별 추이와 지역/기업 분포를 비교한 뒤, 3. 상세 데이터에서 조건별로 필터링하고 내려받을 수 있습니다.</p>
+    </div>
+    ''', unsafe_allow_html=True)
+
 def show_insights(trend: TrendAnalysis, stats: EmploymentStats):
     """주요 인사이트 표시"""
     col1, col2 = st.columns(2)
@@ -1051,12 +1103,23 @@ def show_advanced_filters(processor: EmploymentDataProcessor):
     if processor.employed_df is None:
         st.warning("취업자 데이터가 없습니다.")
         return
+
+    year_column = get_available_column(processor.df, ['year', '조사년도'])
+    status_column = get_available_column(processor.employed_df, ['employment_status', '취업구분1'])
+    company_name_column = get_available_column(processor.employed_df, ['company_name', '국내진학학교명/국내기업명'])
+    company_type_column = get_available_column(processor.employed_df, ['기업구분'])
+    company_size_column = get_available_column(processor.employed_df, ['회사구분'])
+    major_match_column = get_available_column(processor.employed_df, ['전공일치여부'])
+
+    st.caption("필터와 표시는 현재 데이터에 존재하는 컬럼에 맞춰 자동으로 구성됩니다.")
     
     # 필터 컨트롤
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        years = ['전체'] + sorted(processor.df['조사년도'].unique().tolist())
+        years = ['전체']
+        if year_column:
+            years += sorted(processor.df[year_column].dropna().unique().tolist())
         selected_year = st.selectbox("📅 연도 선택", years)
     
     with col2:
@@ -1076,8 +1139,8 @@ def show_advanced_filters(processor: EmploymentDataProcessor):
     # 데이터 필터링
     filtered_df = processor.employed_df.copy()
     
-    if selected_year != '전체':
-        filtered_df = filtered_df[filtered_df['조사년도'] == selected_year]
+    if selected_year != '전체' and year_column:
+        filtered_df = filtered_df[filtered_df[year_column] == selected_year]
     
     if selected_region != '전체':
         filtered_df = filtered_df[filtered_df['기업지역'] == selected_region]
@@ -1096,17 +1159,17 @@ def show_advanced_filters(processor: EmploymentDataProcessor):
     
     if not filtered_df.empty:
         # 표시할 컬럼 선택
-        display_columns = ['조사년도', '취업구분1']
-        if '국내진학학교명/국내기업명' in filtered_df.columns:
-            display_columns.append('국내진학학교명/국내기업명')
-        if '기업지역' in filtered_df.columns:
-            display_columns.append('기업지역')
-        if '기업구분' in filtered_df.columns:
-            display_columns.append('기업구분')
-        if '회사구분' in filtered_df.columns:
-            display_columns.append('회사구분')
-        if '전공일치여부' in filtered_df.columns:
-            display_columns.append('전공일치여부')
+        display_columns = [
+            column for column in [
+                year_column,
+                status_column,
+                company_name_column,
+                '기업지역',
+                company_type_column,
+                company_size_column,
+                major_match_column
+            ] if column and column in filtered_df.columns
+        ]
         
         # 데이터테이블 표시
         st.dataframe(
@@ -1134,14 +1197,19 @@ def setup_sidebar():
         - 연도별 취업률 분석
         - 지역별 취업 현황
         - 기업 유형별 분석
-        - 전공일치도 분석
-        - 데이터 품질 리포트
+        - 상세 데이터 필터링 및 다운로드
         
         **📅 분석 기간**
         {APP_META['period']}
         
         **🎯 분석 대상**
         {APP_META['target']}
+
+        **🧭 추천 탐색 순서**
+        - KPI 확인
+        - 연도별 추이 비교
+        - 지역/기업 분포 해석
+        - 상세 데이터 필터링
         """)
 
 def render_dashboard(processor: EmploymentDataProcessor, stats: EmploymentStats, trend: TrendAnalysis):
@@ -1151,6 +1219,8 @@ def render_dashboard(processor: EmploymentDataProcessor, stats: EmploymentStats,
     
     # 인사이트 표시
     show_insights(trend, stats)
+
+    st.caption("KPI와 연도별 탭은 전체 졸업자 대비 취업률을, 지역/기업 탭은 취업자 분포를 중심으로 보여줍니다.")
     
     # 탭 기반 대시보드 구성 (품질보고서 탭 제거)
     tabs = st.tabs(["📈 연도별 분석", "🗺️ 지역별 분석", "🏢 기업별 분석", "🔍 상세 데이터"])
@@ -1208,13 +1278,15 @@ def render_regional_analysis(processor: EmploymentDataProcessor):
         return
     
     # 차트 생성
-    bar_chart, pie_chart = VisualizationModule.create_regional_chart(regional_stats)
+    bar_chart, comparison_chart = VisualizationModule.create_regional_chart(regional_stats)
     
     col1, col2 = st.columns(2)
     with col1:
         st.plotly_chart(bar_chart, use_container_width=True)
     with col2:
-        st.plotly_chart(pie_chart, use_container_width=True)
+        st.plotly_chart(comparison_chart, use_container_width=True)
+
+    st.caption("왼쪽은 상위 10개 지역 전체 비교, 오른쪽은 상위 8개 지역과 나머지 지역 묶음을 함께 비교한 요약 차트입니다.")
     
     # 지역별 인사이트
     generate_regional_insights(regional_stats)
@@ -1235,6 +1307,8 @@ def render_company_analysis(processor: EmploymentDataProcessor):
         with col2:
             if not company_group_stats.empty:
                 st.plotly_chart(size_chart, use_container_width=True)
+
+        st.caption("막대 길이는 취업자 수를, 라벨은 취업자 수와 비율을 함께 보여줍니다.")
         
         # 데이터 표 표시
         st.subheader("📊 상세 데이터")

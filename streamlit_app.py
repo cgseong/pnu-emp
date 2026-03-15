@@ -868,7 +868,7 @@ class VisualizationModule:
     def create_regional_chart(regional_stats: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
         """지역별 분석 차트 생성"""
         # 막대 차트
-        top_10_regions = regional_stats.head(10)
+        top_10_regions = regional_stats.head(10).copy()
         bar_fig = px.bar(
             top_10_regions,  # 상위 10개 지역만 표시
             x='지역',
@@ -887,8 +887,8 @@ class VisualizationModule:
             yaxis_title='취업자 수 (명)'
         )
         
-        # 파이 차트 (상위 8개 지역 + 기타)
-        top_regions = regional_stats.head(8)
+        # 보조 막대 차트 (상위 8개 지역 + 기타)
+        top_regions = regional_stats.head(8).copy()
         other_count = regional_stats.iloc[8:]['취업자수'].sum() if len(regional_stats) > 8 else 0
         other_regions_count = max(len(regional_stats) - len(top_regions), 0)
         
@@ -899,21 +899,37 @@ class VisualizationModule:
                 '취업자수': [other_count],
                 '비율': [other_count / regional_stats['취업자수'].sum() * 100]
             })
-            pie_data = pd.concat([top_regions, other_row], ignore_index=True)
+            comparison_data = pd.concat([top_regions, other_row], ignore_index=True)
         else:
-            pie_data = top_regions
+            comparison_data = top_regions
         
-        pie_fig = px.pie(
-            pie_data,
-            values='취업자수',
-            names='지역',
-            title='🧭 상위 8개 지역 + 기타 비율',
-            color_discrete_sequence=px.colors.qualitative.Set3
+        comparison_data = comparison_data.sort_values('취업자수', ascending=True)
+        comparison_fig = px.bar(
+            comparison_data,
+            x='취업자수',
+            y='지역',
+            orientation='h',
+            text='비율',
+            title='🧭 상위 8개 지역 + 기타 비교',
+            labels={'취업자수': '취업자 수 (명)', '지역': '지역'},
+            color='취업자수',
+            color_continuous_scale='Tealgrn'
         )
-        pie_fig.update_traces(textposition='inside', textinfo='percent+label')
-        pie_fig.update_layout(height=500)
+        comparison_fig.update_traces(
+            texttemplate='%{x:,}명 (%{text:.1f}%)',
+            textposition='outside',
+            cliponaxis=False
+        )
+        comparison_fig.update_layout(
+            height=500,
+            showlegend=False,
+            coloraxis_showscale=False,
+            xaxis_title='취업자 수 (명)',
+            yaxis_title='지역',
+            margin=dict(l=20, r=90, t=60, b=20)
+        )
         
-        return bar_fig, pie_fig
+        return bar_fig, comparison_fig
     
     @staticmethod
     def create_company_charts(company_type_stats: pd.DataFrame, company_size_stats: pd.DataFrame) -> Tuple[go.Figure, go.Figure]:
